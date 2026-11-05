@@ -3,796 +3,434 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>ALAMAT | Chronicles of the Philippines</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ALAMAT: Chronicles of the Philippines</title>
 <script type="importmap">
-{
-  "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
-  }
-}
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"}}
 </script>
-
 <style>
-* { box-sizing:border-box; }
-
-body {
-  margin:0;
-  overflow:hidden;
-  font-family:Arial,sans-serif;
-  background:#102b25;
-  color:white;
+*{box-sizing:border-box}
+body{margin:0;overflow:hidden;background:#10251c;color:white;font-family:Arial,sans-serif}
+canvas{display:block}
+.panel{position:absolute;background:#10271fe8;border:1px solid #d9b45f;border-radius:12px;padding:12px;z-index:5}
+#hud{top:12px;left:12px;min-width:205px}
+#hud h2{color:#f6d78d;margin:0 0 5px;letter-spacing:2px}
+#hud p{font-size:13px;margin:7px 0}
+#quest{top:12px;right:12px;width:225px}
+#quest h3{color:#f6d78d;margin:0 0 8px}
+#quest p{font-size:13px;line-height:1.4}
+#controls{bottom:12px;left:12px;font-size:12px;line-height:1.7}
+#dialog{display:none;bottom:20px;left:50%;transform:translateX(-50%);width:min(92%,520px);text-align:center;z-index:10}
+#dialog h3{color:#f6d78d;margin:3px}
+#dialog p{line-height:1.5}
+button,select{background:#d8ad58;color:#17271c;border:0;border-radius:7px;padding:9px 12px;font-weight:bold;cursor:pointer;margin:3px}
+button:hover{background:#f4d58c}
+#hint{bottom:100px;left:50%;transform:translateX(-50%);display:none}
+#toast{top:45%;left:50%;transform:translate(-50%,-50%);display:none;text-align:center}
+#menu{top:145px;right:12px;width:225px}
+#menu button{width:100%;margin:3px 0}
+#mobile{display:none;position:absolute;bottom:12px;right:12px;z-index:8}
+#mobile button{width:54px;height:48px;font-size:18px}
+#mobile .pad{display:grid;grid-template-columns:repeat(3,54px);gap:3px}
+#mobile .actions{display:flex;justify-content:center}
+small{color:#dfd7bc}
+@media(max-width:650px){
+ #hud{transform:scale(.78);transform-origin:top left}
+ #quest{transform:scale(.78);transform-origin:top right}
+ #controls{display:none}
+ #mobile{display:block}
+ #menu{top:125px;transform:scale(.85);transform-origin:top right}
 }
-
-canvas { display:block; }
-
-#hud {
-  position:absolute;
-  top:15px;
-  left:15px;
-  background:#102b25e8;
-  border:1px solid #d9b45f;
-  border-radius:15px;
-  padding:15px;
-  min-width:220px;
-  z-index:5;
-}
-
-#hud h2 {
-  color:#f5d78e;
-  margin:0 0 5px;
-  letter-spacing:2px;
-}
-
-#hud p { margin:8px 0; font-size:13px; }
-
-#quest {
-  position:absolute;
-  top:15px;
-  right:15px;
-  background:#102b25e8;
-  border:1px solid #d9b45f;
-  border-radius:14px;
-  padding:15px;
-  width:230px;
-  z-index:5;
-}
-
-#quest h3 { color:#f5d78e; margin:0 0 10px; }
-
-#dialog {
-  display:none;
-  position:absolute;
-  bottom:25px;
-  left:50%;
-  transform:translateX(-50%);
-  width:min(90%,500px);
-  padding:20px;
-  text-align:center;
-  background:#102b25f2;
-  border:2px solid #e5c477;
-  border-radius:16px;
-  z-index:10;
-}
-
-#dialog h3 { color:#f5d78e; }
-
-button {
-  background:#d8a94c;
-  color:#17251c;
-  border:0;
-  border-radius:8px;
-  padding:11px 18px;
-  font-weight:bold;
-  cursor:pointer;
-}
-
-#controls {
-  position:absolute;
-  bottom:15px;
-  left:15px;
-  background:#102b25dc;
-  padding:12px;
-  border-radius:12px;
-  font-size:12px;
-  line-height:1.8;
-  z-index:5;
-}
-
-#message {
-  position:absolute;
-  top:50%;
-  left:50%;
-  transform:translate(-50%,-50%);
-  background:#102b25ee;
-  padding:15px 25px;
-  border:1px solid #d9b45f;
-  border-radius:12px;
-  display:none;
-  z-index:8;
-  text-align:center;
-}
-
-#interaction {
-  position:absolute;
-  bottom:120px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#102b25e8;
-  padding:12px 20px;
-  border-radius:10px;
-  display:none;
-  z-index:5;
-}
-
-#crosshair {
-  position:absolute;
-  top:50%;
-  left:50%;
-  color:white;
-  opacity:.6;
-  pointer-events:none;
-}
-
 </style>
 </head>
-
 <body>
-
-<div id="hud">
-  <h2>🇵🇭 ALAMAT</h2>
-  <small>Chronicles of the Philippines</small>
-  <p>🌴 Everdream Village</p>
-  <p>⭐ Level: <span id="level">1</span></p>
-  <p>✨ Experience: <span id="xp">0</span></p>
-  <p>🪙 Coins: <span id="coins">0</span></p>
-  <p>🎒 Inventory: <span id="items">0</span> artifacts</p>
+<div id="hud" class="panel">
+ <h2>🇵🇭 ALAMAT</h2>
+ <small>Chronicles of the Philippines</small>
+ <p>📍 <span id="place">Everdream Village</span></p>
+ <p>⭐ Level: <b id="level">1</b></p>
+ <p>✨ XP: <b id="xp">0</b></p>
+ <p>🪙 Coins: <b id="coins">0</b></p>
+ <p>🎒 Items: <b id="items">0</b></p>
 </div>
-
-<div id="quest">
-  <h3>📜 Main Quest</h3>
-  <b id="questName">The Lost Filipino Legends</b>
-  <p id="questText">Find the three ancient artifacts hidden in the village.</p>
-  <p id="progress">Artifacts: 0 / 3</p>
+<div id="quest" class="panel">
+ <h3>📜 Main Quest</h3>
+ <b id="questName">The Lost Filipino Legends</b>
+ <p id="questText">Hanapin ang tatlong sinaunang artifact at kausapin ang Elder.</p>
+ <p id="progress">Artifacts: 0 / 3</p>
 </div>
-
-<div id="controls">
-  <b>CONTROLS</b><br>
-  W A S D - Move<br>
-  SPACE - Jump<br>
-  E - Interact<br>
-  Mouse - Look around<br>
-  ESC - Release mouse
+<div id="menu" class="panel">
+ <b style="color:#f6d78d">🌏 WORLD & CHARACTER</b>
+ <p><small>Choose a destination</small></p>
+ <select id="destination" style="width:100%">
+  <option value="village">Everdream Village</option>
+  <option value="intramuros">Intramuros, Manila</option>
+  <option value="banaue">Banaue Rice Terraces</option>
+  <option value="mayon">Mayon Volcano</option>
+  <option value="bohol">Chocolate Hills, Bohol</option>
+  <option value="palawan">Palawan</option>
+ </select>
+ <button id="travel" >Travel to Destination</button>
+ <hr>
+ <small>Character outfit</small>
+ <button id="outfit">Change Outfit</button>
+ <button id="voice">🔊 Filipino Voice: ON</button>
+ <button id="inventory">🎒 View Inventory</button>
+ <button id="craft">🛠️ Craft Item</button>
+ <button id="farm">🌱 Plant a Crop</button>
+ <button id="fish">🎣 Go Fishing</button>
 </div>
-
-<div id="interaction">Press E to interact</div>
-
-<div id="dialog">
-  <h3 id="speaker">Village Elder</h3>
-  <p id="dialogText"></p>
-  <button id="closeDialog">Continue</button>
+<div id="controls" class="panel">
+ <b>CONTROLS</b><br>
+ W A S D — Move<br>
+ SPACE — Jump<br>
+ E — Interact / Collect<br>
+ Mouse — Look around<br>
+ ESC — Release mouse
 </div>
-
-<div id="message"></div>
+<div id="hint" class="panel">Press E to interact</div>
+<div id="toast" class="panel"></div>
+<div id="dialog" class="panel">
+ <h3 id="speaker">Village Elder</h3>
+ <p id="dialogText"></p>
+ <button id="speak">🔊 Listen</button>
+ <button id="closeDialog">Continue</button>
+</div>
+<div id="mobile">
+ <div class="pad">
+  <span></span><button data-key="w">▲</button><span></span>
+  <button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button>
+ </div>
+ <div class="actions"><button id="mobileJump">JUMP</button><button id="mobileUse">USE</button></div>
+</div>
 
 <script type="module">
-
 import * as THREE from 'three';
 
-// =================================
-// GAME SETUP
-// =================================
-
-const scene = new THREE.Scene();
-
-scene.background = new THREE.Color(0x91d9df);
-scene.fog = new THREE.Fog(0x91d9df,40,120);
-
-const camera = new THREE.PerspectiveCamera(
-  65,
-  innerWidth/innerHeight,
-  0.1,
-  300
-);
-
-const renderer = new THREE.WebGLRenderer({
-  antialias:true
-});
-
+// ---------- GAME SETUP ----------
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x8bd5dc);
+scene.fog=new THREE.Fog(0x8bd5dc,55,145);
+const camera=new THREE.PerspectiveCamera(65,innerWidth/innerHeight,.1,400);
+const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(innerWidth,innerHeight);
-renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
 renderer.shadowMap.enabled=true;
 renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-
 renderer.outputColorSpace=THREE.SRGBColorSpace;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;
-
 document.body.appendChild(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xffffff,0x557746,2));
+const sun=new THREE.DirectionalLight(0xfff1d2,2.4);
+sun.position.set(-25,45,25);sun.castShadow=true;
+sun.shadow.mapSize.set(1024,1024);scene.add(sun);
 
-// =================================
-// LIGHTING
-// =================================
-
-scene.add(new THREE.HemisphereLight(
-  0xffffff,0x557746,2
-));
-
-const sun=new THREE.DirectionalLight(0xffffff,2.5);
-sun.position.set(-20,35,20);
-sun.castShadow=true;
-sun.shadow.mapSize.set(2048,2048);
-
-scene.add(sun);
-
-// =================================
-// MATERIAL HELPER
-// =================================
-
-function material(color,roughness=1){
-  return new THREE.MeshStandardMaterial({
-    color,
-    roughness
-  });
+const mat=(c,r=1)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
+function box(parent,x,y,z,w,h,d,color){
+ const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat(color));
+ m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;
+ parent.add(m);return m;
+}
+function sphere(parent,x,y,z,r,color){
+ const m=new THREE.Mesh(new THREE.SphereGeometry(r,12,10),mat(color));
+ m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m;
+}
+function group(parent,x=0,y=0,z=0){
+ const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);return g;
 }
 
-function makeBox(x,y,z,w,h,d,color){
-  const mesh=new THREE.Mesh(
-    new THREE.BoxGeometry(w,h,d),
-    material(color)
-  );
-
-  mesh.position.set(x,y,z);
-  mesh.castShadow=true;
-  mesh.receiveShadow=true;
-  scene.add(mesh);
-  return mesh;
-}
-
-// =================================
-// WORLD GROUND
-// =================================
-
-makeBox(0,-0.6,0,120,1,120,0x75a95c);
-
-// Paths
-makeBox(0,0.02,12,9,0.08,55,0xbfa16b);
-makeBox(-5,0.03,-5,35,0.08,7,0xbfa16b);
-
-// =================================
-// RIVER
-// =================================
-
-const river=new THREE.Mesh(
-  new THREE.PlaneGeometry(9,100),
-  new THREE.MeshStandardMaterial({
-    color:0x36b9d4,
-    roughness:0.2,
-    metalness:0.1
-  })
-);
-
-river.rotation.x=-Math.PI/2;
-river.position.set(22,0.02,0);
-scene.add(river);
-
-// =================================
-// RICE TERRACES
-// =================================
-
-for(let i=0;i<7;i++){
-  makeBox(
-    -35+i*2,
-    0.2+i*0.35,
-    -25,
-    18,
-    0.4,
-    8,
-    0x80b75b
-  );
-}
-
-// =================================
-// TREES
-// =================================
-
-function createTree(x,z){
-
-  const trunk=new THREE.Mesh(
-    new THREE.CylinderGeometry(0.3,0.5,3,8),
-    material(0x79502e)
-  );
-
-  trunk.position.set(x,1.5,z);
-  trunk.castShadow=true;
-  scene.add(trunk);
-
-  const leaves=new THREE.Mesh(
-    new THREE.SphereGeometry(2,12,10),
-    material(0x287a43)
-  );
-
-  leaves.position.set(x,3.8,z);
-  leaves.castShadow=true;
-  scene.add(leaves);
-
-}
-
-for(let i=0;i<65;i++){
-
-  const x=(Math.random()-0.5)*105;
-  const z=(Math.random()-0.5)*105;
-
-  if(Math.abs(x)<15 && Math.abs(z)<20) continue;
-  if(Math.abs(x-22)<7) continue;
-
-  createTree(x,z);
-}
-
-// =================================
-// BAHAY KUBO
-// =================================
-
-function createHouse(x,z){
-
-  makeBox(x,1.2,z,5,2.4,4,0xb78c58);
-
-  makeBox(x,2.6,z,6.5,0.4,5.5,0x82502f);
-
-  makeBox(x,3.1,z,5.8,0.35,4.8,0x9b6736);
-
-  makeBox(x-1.2,0.4,z+2.2,0.3,0.8,0x78512e);
-  makeBox(x+1.2,0.4,z+2.2,0.3,0.8,0x78512e);
-
-  makeBox(x,1,z+2.05,1,1.5,0x63432a);
-}
-
-createHouse(-8,-8);
-createHouse(7,-10);
-createHouse(-12,7);
-createHouse(8,8);
-createHouse(-22,0);
-
-// =================================
-// PLAYER CHARACTER
-// =================================
-
-const player=new THREE.Group();
-
-const body=new THREE.Mesh(
-  new THREE.CapsuleGeometry(0.45,0.85,4,8),
-  material(0x2775dc)
-);
-
-body.position.y=1.05;
-body.castShadow=true;
-player.add(body);
-
-const head=new THREE.Mesh(
-  new THREE.SphereGeometry(0.34,16,16),
-  material(0xe5b48b)
-);
-
-head.position.y=1.85;
-player.add(head);
-
-// Hair
-const hair=new THREE.Mesh(
-  new THREE.SphereGeometry(0.35,12,8),
-  material(0x302018)
-);
-
-hair.scale.set(1,0.55,1);
-hair.position.set(0,2.02,0);
-player.add(hair);
-
-// Arms
-const armMaterial=material(0xe5b48b);
-
+// ---------- PLAYER ----------
+const player=group(scene,0,0,15);
+const outfitColors=[0x2775dc,0x9b382e,0x267b50,0x8b54ae,0xd3a33c];
+let outfitIndex=0;
+const body= new THREE.Mesh(new THREE.CapsuleGeometry(.43,.8,4,8),mat(outfitColors[0]));
+body.position.y=1;body.castShadow=true;player.add(body);
+const head=sphere(player,0,1.85,0,.34,0xd9a47e);
+const hair=sphere(player,0,2.05,-.04,.35,0x302018);
+hair.scale.set(1,.55,1);
 for(const side of [-1,1]){
-  const arm=new THREE.Mesh(
-    new THREE.BoxGeometry(0.2,0.75,0.2),
-    armMaterial
-  );
-
-  arm.position.set(side*0.55,1.15,0);
-  player.add(arm);
+ const arm=box(player,side*.52,1.05,0,.19,.72,.2,0xd9a47e);
+}
+function changeOutfit(){
+ outfitIndex=(outfitIndex+1)%outfitColors.length;
+ body.material.color.setHex(outfitColors[outfitIndex]);
+ toast("Bagong outfit unlocked!");
 }
 
-player.position.set(0,0,15);
-scene.add(player);
-
-// =================================
-// NPC VILLAGE ELDER
-// =================================
-
-const elder=new THREE.Group();
-
-const elderBody=new THREE.Mesh(
-  new THREE.CapsuleGeometry(0.4,0.9,4,8),
-  material(0xe2bd62)
-);
-
-elderBody.position.y=1;
-elder.add(elderBody);
-
-const elderHead=new THREE.Mesh(
-  new THREE.SphereGeometry(0.34,16,16),
-  material(0xc98f67)
-);
-
-elderHead.position.y=1.8;
-elder.add(elderHead);
-
-// Elder hat
-const hat=new THREE.Mesh(
-  new THREE.ConeGeometry(0.55,0.45,8),
-  material(0x76502e)
-);
-
-hat.position.y=2.3;
-elder.add(hat);
-
-elder.position.set(3,0,1);
-scene.add(elder);
-
-// =================================
-// ANCIENT ARTIFACTS
-// =================================
-
-const artifacts=[];
-
-const artifactPositions=[
-  [-14,0,-16],
-  [27,0,-12],
-  [-30,0,20]
-];
-
-for(const pos of artifactPositions){
-
-  const gem=new THREE.Mesh(
-    new THREE.OctahedronGeometry(0.8),
-    new THREE.MeshStandardMaterial({
-      color:0xffd65c,
-      emissive:0xb77a10,
-      emissiveIntensity:1
-    })
-  );
-
-  gem.position.set(pos[0],1.5,pos[2]);
-  gem.castShadow=true;
-  scene.add(gem);
-
-  artifacts.push({
-    mesh:gem,
-    collected:false
-  });
-}
-
-// =================================
-// GAME VARIABLES
-// =================================
-
+// ---------- WORLD OBJECTS ----------
+let worldObjects=[];
+let artifacts=[];
+let npcs=[];
+let region="village";
+let collected=0, xp=0, coins=0, crops=0, fish=0, crafted=0;
+let questStarted=false,questDone=false;
+let dialogOpen=false,voiceOn=true;
 const keys={};
-
-let velocityY=0;
-let onGround=true;
-let dialogOpen=false;
-
-let xp=0;
-let coins=0;
-let collected=0;
-let questStarted=false;
-let questFinished=false;
-
-let cameraAngle=0;
-let cameraDistance=8;
-
+let velocityY=0,onGround=true,cameraAngle=0;
 const clock=new THREE.Clock();
 
-// =================================
-// KEYBOARD
-// =================================
-
-window.addEventListener('keydown',e=>{
-
-  keys[e.key.toLowerCase()]=true;
-
-  if(e.code==='Space' && onGround && !dialogOpen){
-    velocityY=8;
-    onGround=false;
-  }
-
-  if(e.key.toLowerCase()==='e'){
-    interact();
-  }
-
-});
-
-window.addEventListener('keyup',e=>{
-  keys[e.key.toLowerCase()]=false;
-});
-
-// =================================
-// MOUSE CAMERA
-// =================================
-
-let mouseDown=false;
-
-renderer.domElement.addEventListener('mousedown',()=>{
-  renderer.domElement.requestPointerLock();
-});
-
-document.addEventListener('mousemove',e=>{
-
-  if(document.pointerLockElement===renderer.domElement){
-    cameraAngle-=e.movementX*0.003;
-  }
-
-});
-
-// =================================
-// INTERACTION
-// =================================
-
-function openDialog(name,text){
-
-  dialogOpen=true;
-
-  document.getElementById('speaker').textContent=name;
-  document.getElementById('dialogText').textContent=text;
-  document.getElementById('dialog').style.display='block';
-
+function clearWorld(){
+ for(const o of worldObjects)scene.remove(o);
+ worldObjects=[];artifacts=[];npcs=[];
 }
-
-document.getElementById('closeDialog').onclick=()=>{
-
-  dialogOpen=false;
-  document.getElementById('dialog').style.display='none';
-
-  if(questStarted && collected===3 && !questFinished){
-    questFinished=true;
-    xp+=100;
-    coins+=50;
-    updateHUD();
-
-    showMessage('🏆 QUEST COMPLETED! +100 XP and +50 Coins');
-  }
-
+function addWorld(g){worldObjects.push(g);return g}
+function tree(x,z){
+ const g=addWorld(group(scene,x,0,z));
+ const trunk=new THREE.Mesh(new THREE.CylinderGeometry(.25,.4,3,8),mat(0x78502d));
+ trunk.position.y=1.5;trunk.castShadow=true;g.add(trunk);
+ sphere(g,0,3.5,0,1.7,0x267b43);
+ sphere(g,.8,3.1,.3,1.1,0x368b48);
+}
+function house(x,z){
+ const g=addWorld(group(scene,x,0,z));
+ box(g,0,1.1,0,4.8,2.2,4,0xb78a56);
+ box(g,0,2.45,0,6,.35,5.2,0x78462b);
+ const roof=new THREE.Mesh(new THREE.ConeGeometry(4,2,4),mat(0x92532d));
+ roof.rotation.y=Math.PI/4;roof.position.y=3.3;roof.castShadow=true;g.add(roof);
+ box(g,0,.8,2.05,1,1.5,.12,0x51321f);
+ for(const s of [-1,1])box(g,s*1.5,.55,2.2,.25,1.1,.25,0x78502d);
+}
+function makeNPC(name,x,z,color,role,dialogue){
+ const g=addWorld(group(scene,x,0,z));
+ const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.38,.85,4,8),mat(color));
+ torso.position.y=1;g.add(torso);
+ sphere(g,0,1.85,0,.33,0xc98e68);
+ sphere(g,0,2.05,-.04,.35,0x302018).scale.y=.5;
+ const marker=sphere(g,0,2.6,0,.13,0xffd75e);
+ const npc={name,group:g,role,dialogue,marker};
+ npcs.push(npc);return npc;
+}
+function makeArtifact(x,z,index){
+ const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.65),new THREE.MeshStandardMaterial({
+  color:[0xffd34e,0x56dfff,0xe27bff][index],
+  emissive:[0x9b6410,0x145c83,0x71218b][index],
+  emissiveIntensity:1.2
+ }));
+ gem.position.set(x,1.5,z);gem.castShadow=true;scene.add(gem);
+ artifacts.push({mesh:gem,collected:false});
+}
+const regions={
+ village:{name:"Everdream Village",sky:0x8bd5dc,ground:0x70a954,desc:"Isang payapang nayon na puno ng mga alamat."},
+ intramuros:{name:"Intramuros, Manila",sky:0xb6c6d2,ground:0x9d927c,desc:"Tuklasin ang mga lihim ng makasaysayang lungsod."},
+ banaue:{name:"Banaue Rice Terraces",sky:0x9bd9d0,ground:0x69a34d,desc:"Hanapin ang sinaunang tanda sa hagdang-hagdang palayan."},
+ mayon:{name:"Mayon Volcano",sky:0xe8b99a,ground:0x8c7655,desc:"Mag-ingat sa mga kuweba sa paanan ng bulkan."},
+ bohol:{name:"Chocolate Hills, Bohol",sky:0x9dd6dc,ground:0x7d9d52,desc:"Lutasin ang palaisipan sa mga burol."},
+ palawan:{name:"Palawan",sky:0x8dd9e8,ground:0x64a65b,desc:"Hanapin ang nakatagong kayamanan sa isla."}
 };
+function buildRegion(id){
+ clearWorld();region=id;
+ const data=regions[id];
+ scene.background.setHex(data.sky);scene.fog.color.setHex(data.sky);
+ box(scene,0,-.65,0,125,1,125,data.ground);
+ if(id==="village"){
+  // river and village paths
+  const river=new THREE.Mesh(new THREE.PlaneGeometry(9,110),mat(0x35b9d4));
+  river.rotation.x=-Math.PI/2;river.position.set(23,.02,0);addWorld(river);
+  box(scene,0,.02,12,8,.08,55,0xc6a675);
+  for(let i=0;i<7;i++)box(scene,-35+i*2,.2+i*.32,-25,18,.4,8,0x82b65b);
+  [[-8,-8],[7,-10],[-12,7],[8,8],[-22,0]].forEach(p=>house(...p));
+  makeNPC("Village Elder",3,1,0xe2bd62,"elder","Maligayang pagdating, batang bayani! Hanapin ang tatlong sinaunang artifact na nakatago sa nayon. Bumalik ka sa akin kapag nakuha mo na ang lahat.");
+  makeNPC("Aling Maria",-7,4,0xb34d56,"farmer","Magtanim ka ng binhi sa ating bukid. Ang sipag ay nagbubunga ng biyaya!");
+  makeNPC("Mangingisda",17,8,0x326d9c,"fisher","Subukan mong mangisda sa tabi ng ilog. Baka may makuha kang bihirang bagay!");
+  [[-14,-16],[27,-12],[-30,20]].forEach((p,i)=>makeArtifact(p[0],p[1],i));
+  for(let i=0;i<55;i++){
+   let x=(Math.random()-.5)*110,z=(Math.random()-.5)*110;
+   if(Math.abs(x)<16&&Math.abs(z)<18)continue;
+   if(Math.abs(x-23)<7)continue;tree(x,z);
+  }
+ }else{
+  // region landmark and decorative scenery
+  if(id==="intramuros"){
+   for(let x=-24;x<=24;x+=12){
+    box(scene,x,2,-12,9,4,5,0xb9a17c);
+    box(scene,x,4.3,-12,10,.7,6,0x876b4b);
+   }
+   box(scene,0,3,-22,48,6,2,0x9d8a6a);
+   makeNPC("Historian",0,5,0x9a5439,"historian","Ang mga pader na ito ay saksi sa maraming kabanata ng ating kasaysayan. Ingatan ang ating alaala!");
+  }
+  if(id==="banaue"){
+   for(let i=0;i<9;i++){
+    const y=i*.65,z=-25+i*6;
+    box(scene,0,y,z,65,.35,5,0x79b75c);
+    box(scene,0,y+.18,z+2.5,65,.18,.25,0x4a9eaa);
+   }
+   makeNPC("Ifugao Guide",0,5,0x9b543b,"guide","Maligayang pagdating sa kabundukan! Igalang natin ang lupa at ang tradisyon ng mga ninuno.");
+  }
+  if(id==="mayon"){
+   const volcano=new THREE.Mesh(new THREE.ConeGeometry(19,34,48),mat(0x665448));
+   volcano.position.set(0,16,-28);volcano.castShadow=true;addWorld(volcano);
+   const lava=new THREE.Mesh(new THREE.ConeGeometry(3,7,24),mat(0xc94b25));
+   lava.position.set(0,30,-28);addWorld(lava);
+   makeNPC("Bantay ng Bulkan",7,4,0x9b4937,"guardian","May lihim na kuweba sa paligid ng bulkan. Maging matapang, ngunit mag-ingat!");
+  }
+  if(id==="bohol"){
+   for(let i=0;i<18;i++){
+    const x=(Math.random()-.5)*75,z=(Math.random()-.5)*65;
+    const hill=new THREE.Mesh(new THREE.SphereGeometry(1,16,12),mat(0x806c45));
+    hill.scale.set(3+Math.random()*3,4+Math.random()*4,3+Math.random()*3);
+    hill.position.set(x,hill.scale.y*.65,z);addWorld(hill);
+   }
+   makeNPC("Tagapagbantay",0,4,0x9b543b,"keeper","May palaisipan ang mga burol. Ang sagot ay nasa paligid mo.");
+  }
+  if(id==="palawan"){
+   const sea=new THREE.Mesh(new THREE.PlaneGeometry(100,100),mat(0x27a9c2));
+   sea.rotation.x=-Math.PI/2;sea.position.y=-.2;addWorld(sea);
+   box(scene,0,.1,0,45,.5,40,0x8dbb68);
+   for(let i=0;i<15;i++)tree((Math.random()-.5)*45,(Math.random()-.5)*40);
+   makeNPC("Island Guide",0,4,0x397f9a,"guide","Nakatago sa isla ang isang sinaunang kayamanan. Sundan ang mga palatandaan!");
+  }
+  // Every region has a glowing relic
+  makeArtifact(-10,-8,0);makeArtifact(13,-15,1);makeArtifact(22,15,2);
+ }
+ player.position.set(0,0,15);
+ document.getElementById("place").textContent=data.name;
+ document.getElementById("destination").value=id;
+ document.getElementById("questText").textContent=data.desc;
+ toast("Welcome to "+data.name+"!");
+}
+buildRegion("village");
+
+// ---------- GAME UI & QUESTS ----------
+function updateHUD(){
+ document.getElementById("xp").textContent=xp;
+ document.getElementById("coins").textContent=coins;
+ document.getElementById("items").textContent=collected+crafted+crops+fish;
+ document.getElementById("level").textContent=Math.floor(xp/100)+1;
+ document.getElementById("progress").textContent="Artifacts: "+collected+" / 3";
+ if(collected>=3&&!questDone)document.getElementById("questText").textContent="Bumalik sa tagapangalaga at kumpletuhin ang misyon!";
+}
+function toast(t){
+ const el=document.getElementById("toast");el.textContent=t;el.style.display="block";
+ clearTimeout(toast.timer);toast.timer=setTimeout(()=>el.style.display="none",2500);
+}
+function say(text){
+ if(!voiceOn||!("speechSynthesis"in window))return;
+ speechSynthesis.cancel();
+ const utter=new SpeechSynthesisUtterance(text);
+ utter.lang="fil-PH";utter.rate=.92;speechSynthesis.speak(utter);
+}
+function openDialog(name,text){
+ dialogOpen=true;
+ document.getElementById("speaker").textContent=name;
+ document.getElementById("dialogText").textContent=text;
+ document.getElementById("dialog").style.display="block";
+ document.getElementById("speak").onclick=()=>say(text);
+ say(text);
+}
+function closeDialog(){
+ dialogOpen=false;document.getElementById("dialog").style.display="none";
+ if(collected>=3&&!questDone){
+  questDone=true;xp+=100;coins+=50;updateHUD();
+  toast("🏆 QUEST COMPLETE! +100 XP +50 coins");
+ }
+}
+document.getElementById("closeDialog").onclick=closeDialog;
 
 function interact(){
-
-  if(dialogOpen) return;
-
-  const distance=player.position.distanceTo(elder.position);
-
-  if(distance<4){
-
-    if(!questStarted){
-
-      questStarted=true;
-
-      openDialog(
-        'Village Elder',
-        'Maligayang pagdating sa ating bayan! May tatlong sinaunang artifact na nakatago sa paligid. Hanapin mo ang mga ito at tuklasin ang kuwento ng ating mga ninuno!'
-      );
-
-    }else if(collected===3){
-
-      openDialog(
-        'Village Elder',
-        'Napakagaling! Naibalik mo ang mga sinaunang artifact. Ipinagmamalaki kita, batang bayani!'
-      );
-
-    }else{
-
-      openDialog(
-        'Village Elder',
-        'Ipagpatuloy mo ang paghahanap! May tatlong artifact sa paligid ng ating nayon.'
-      );
-
-    }
-
-    return;
+ if(dialogOpen)return;
+ let nearest=null,dist=5;
+ for(const n of npcs){
+  const d=player.position.distanceTo(n.group.position);
+  if(d<dist){dist=d;nearest=n;}
+ }
+ if(nearest){
+  if(nearest.role==="elder"&&!questStarted){
+   questStarted=true;
+   document.getElementById("questName").textContent="The Lost Filipino Legends";
+   openDialog(nearest.name,nearest.dialogue);
+  }else if(nearest.role==="elder"&&collected>=3){
+   openDialog(nearest.name,"Napakagaling! Naibalik mo ang mga sinaunang artifact. Ipinagmamalaki kita, batang bayani!");
+  }else openDialog(nearest.name,nearest.dialogue);
+  return;
+ }
+ for(const a of artifacts){
+  if(!a.collected&&player.position.distanceTo(a.mesh.position)<3.5){
+   a.collected=true;scene.remove(a.mesh);collected++;xp+=25;coins+=10;
+   updateHUD();toast("✨ Ancient Artifact collected! +25 XP");
+   return;
   }
-
-  for(const artifact of artifacts){
-
-    if(
-      !artifact.collected &&
-      player.position.distanceTo(artifact.mesh.position)<3
-    ){
-
-      artifact.collected=true;
-      scene.remove(artifact.mesh);
-
-      collected++;
-      xp+=25;
-      coins+=10;
-
-      updateHUD();
-
-      showMessage('✨ Ancient Artifact Collected!');
-
-      return;
-    }
-
-  }
-
+ }
+ toast("Walang puwedeng kausapin o kunin sa malapit.");
 }
-
-// =================================
-// HUD
-// =================================
-
-function updateHUD(){
-
-  document.getElementById('xp').textContent=xp;
-  document.getElementById('coins').textContent=coins;
-  document.getElementById('items').textContent=collected;
-
-  document.getElementById('progress').textContent=
-    'Artifacts: '+collected+' / 3';
-
-  document.getElementById('level').textContent=
-    Math.floor(xp/100)+1;
-
-  if(collected===3){
-    document.getElementById('questText').textContent=
-      'Return to the Village Elder!';
-  }
-
+function travel(id){
+ buildRegion(id);
 }
+document.getElementById("travel").onclick=()=>travel(document.getElementById("destination").value);
+document.getElementById("outfit").onclick=changeOutfit;
+document.getElementById("voice").onclick=()=>{
+ voiceOn=!voiceOn;
+ document.getElementById("voice").textContent="🔊 Filipino Voice: "+(voiceOn?"ON":"OFF");
+ if(!voiceOn)speechSynthesis?.cancel();
+};
+document.getElementById("inventory").onclick=()=>toast("🎒 Inventory: "+collected+" artifacts, "+crops+" crops, "+fish+" fish, "+crafted+" crafted items.");
+document.getElementById("craft").onclick=()=>{
+ if(coins>=10){coins-=10;crafted++;xp+=10;updateHUD();toast("🛠️ Nakagawa ka ng isang magic charm!");}
+ else toast("Kailangan mo ng 10 coins para mag-craft.");
+};
+document.getElementById("farm").onclick=()=>{
+ crops++;xp+=5;updateHUD();toast("🌱 Nagtanim ka ng palay! +5 XP");
+};
+document.getElementById("fish").onclick=()=>{
+ if(region!=="village"&&region!=="palawan"){toast("Maghanap ng tubig sa village o Palawan.");return;}
+ fish++;coins+=5;xp+=5;updateHUD();toast("🎣 Nakahuli ka ng isda! +5 coins");
+};
 
-function showMessage(text){
-
-  const box=document.getElementById('message');
-
-  box.textContent=text;
-  box.style.display='block';
-
-  setTimeout(()=>{
-    box.style.display='none';
-  },2200);
-
-}
-
-// =================================
-// CAMERA AND MOVEMENT
-// =================================
-
-function animate(){
-
-  requestAnimationFrame(animate);
-
-  const delta=Math.min(clock.getDelta(),0.05);
-
-  if(!dialogOpen){
-
-    let forward=0;
-    let sideways=0;
-
-    if(keys['w']) forward=1;
-    if(keys['s']) forward=-1;
-    if(keys['a']) sideways=-1;
-    if(keys['d']) sideways=1;
-
-    const direction=new THREE.Vector3(
-      sideways,
-      0,
-      -forward
-    );
-
-    if(direction.length()>0){
-
-      direction.normalize();
-
-      direction.applyAxisAngle(
-        new THREE.Vector3(0,1,0),
-        cameraAngle
-      );
-
-      player.position.addScaledVector(
-        direction,
-        delta*9
-      );
-
-      player.rotation.y=Math.atan2(
-        direction.x,
-        direction.z
-      );
-
-    }
-
-    velocityY-=20*delta;
-    player.position.y+=velocityY*delta;
-
-    if(player.position.y<=0){
-      player.position.y=0;
-      velocityY=0;
-      onGround=true;
-    }
-
-    player.position.x=THREE.MathUtils.clamp(
-      player.position.x,-53,53
-    );
-
-    player.position.z=THREE.MathUtils.clamp(
-      player.position.z,-53,53
-    );
-
-  }
-
-  // Follow camera
-  const cameraOffset=new THREE.Vector3(
-    Math.sin(cameraAngle)*cameraDistance,
-    5,
-    Math.cos(cameraAngle)*cameraDistance
-  );
-
-  const cameraTarget=player.position.clone()
-    .add(cameraOffset);
-
-  camera.position.lerp(cameraTarget,0.09);
-
-  camera.lookAt(
-    player.position.x,
-    player.position.y+1.2,
-    player.position.z
-  );
-
-  // Artifact animation
-  artifacts.forEach((artifact,i)=>{
-
-    if(!artifact.collected){
-
-      artifact.mesh.rotation.y+=delta;
-      artifact.mesh.position.y=
-        1.5+Math.sin(clock.elapsedTime*2+i)*0.25;
-
-    }
-
-  });
-
-  // Interaction hint
-  const nearElder=
-    player.position.distanceTo(elder.position)<4;
-
-  const nearArtifact=artifacts.some(a=>
-    !a.collected &&
-    player.position.distanceTo(a.mesh.position)<3
-  );
-
-  const hint=document.getElementById('interaction');
-
-  hint.style.display=
-    nearElder || nearArtifact ? 'block':'none';
-
-  hint.textContent=
-    nearElder
-    ? 'Press E to talk to Village Elder'
-    : 'Press E to collect artifact';
-
-  renderer.render(scene,camera);
-
-}
-
-// =================================
-// RESIZE
-// =================================
-
-window.addEventListener('resize',()=>{
-
-  camera.aspect=innerWidth/innerHeight;
-  camera.updateProjectionMatrix();
-
-  renderer.setSize(innerWidth,innerHeight);
-
+// ---------- CONTROLS ----------
+window.addEventListener("keydown",e=>{
+ keys[e.key.toLowerCase()]=true;
+ if(e.code==="Space"&&onGround&&!dialogOpen){velocityY=8;onGround=false;}
+ if(e.key.toLowerCase()==="e")interact();
 });
+window.addEventListener("keyup",e=>keys[e.key.toLowerCase()]=false);
+renderer.domElement.addEventListener("click",()=>{
+ if(!matchMedia("(pointer:coarse)").matches)renderer.domElement.requestPointerLock?.();
+});
+document.addEventListener("mousemove",e=>{
+ if(document.pointerLockElement===renderer.domElement)cameraAngle-=e.movementX*.003;
+});
+document.querySelectorAll("[data-key]").forEach(b=>{
+ const k=b.dataset.key;
+ b.addEventListener("pointerdown",e=>{e.preventDefault();keys[k]=true;});
+ ["pointerup","pointerleave","pointercancel"].forEach(ev=>b.addEventListener(ev,()=>keys[k]=false));
+});
+document.getElementById("mobileJump").onclick=()=>{if(onGround){velocityY=8;onGround=false;}};
+document.getElementById("mobileUse").onclick=interact;
 
-animate();
-
+// ---------- ANIMATION ----------
+function animate(){
+ requestAnimationFrame(animate);
+ const dt=Math.min(clock.getDelta(),.05);
+ if(!dialogOpen){
+  let f=0,s=0;
+  if(keys.w)f=1;if(keys.s)f=-1;if(keys.a)s=-1;if(keys.d)s=1;
+  const dir=new THREE.Vector3(s,0,-f);
+  if(dir.length()>0){
+   dir.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),cameraAngle);
+   player.position.addScaledVector(dir,dt*8);
+   player.rotation.y=Math.atan2(dir.x,dir.z);
+  }
+  velocityY-=20*dt;player.position.y+=velocityY*dt;
+  if(player.position.y<=0){player.position.y=0;velocityY=0;onGround=true;}
+  player.position.x=THREE.MathUtils.clamp(player.position.x,-55,55);
+  player.position.z=THREE.MathUtils.clamp(player.position.z,-55,55);
+ }
+ const offset=new THREE.Vector3(Math.sin(cameraAngle)*8,5,Math.cos(cameraAngle)*8);
+ camera.position.lerp(player.position.clone().add(offset),.1);
+ camera.lookAt(player.position.x,player.position.y+1.2,player.position.z);
+ artifacts.forEach((a,i)=>{
+  if(!a.collected){a.mesh.rotation.y+=dt;a.mesh.position.y=1.5+Math.sin(clock.elapsedTime*2+i)*.25;}
+ });
+ npcs.forEach(n=>{n.marker.position.y=2.6+Math.sin(clock.elapsedTime*2)*.12;});
+ let near=artifacts.some(a=>!a.collected&&player.position.distanceTo(a.mesh.position)<3.5)
+ ||npcs.some(n=>player.position.distanceTo(n.group.position)<5);
+ document.getElementById("hint").style.display=near?"block":"none";
+ renderer.render(scene,camera);
+}
+window.addEventListener("resize",()=>{
+ camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+ renderer.setSize(innerWidth,innerHeight);
+});
+updateHUD();animate();
 </script>
 </body>
 </html>
