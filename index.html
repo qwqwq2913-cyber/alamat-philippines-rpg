@@ -139,23 +139,95 @@ function group(parent,x=0,y=0,z=0){
  const g=new THREE.Group();g.position.set(x,y,z);parent.add(g);return g;
 }
 
-// ---------- PLAYER ----------
+
+// ---------- DETAILED PLAYER CHARACTER ----------
 const player=group(scene,0,0,15);
 const outfitColors=[0x2775dc,0x9b382e,0x267b50,0x8b54ae,0xd3a33c];
 let outfitIndex=0;
-const body= new THREE.Mesh(new THREE.CapsuleGeometry(.43,.8,4,8),mat(outfitColors[0]));
-body.position.y=1;body.castShadow=true;player.add(body);
-const head=sphere(player,0,1.85,0,.34,0xd9a47e);
-const hair=sphere(player,0,2.05,-.04,.35,0x302018);
+
+// Body and clothing
+const body=new THREE.Mesh(
+ new THREE.CapsuleGeometry(.43,.8,5,12),
+ mat(outfitColors[0])
+);
+body.position.y=1.25;
+body.castShadow=true;
+player.add(body);
+
+// Neck
+const neck=sphere(player,0,1.82,0,.15,0xc98e68);
+
+// Head
+const head=sphere(player,0,2.12,0,.38,0xd9a47e);
+
+// Hair
+const hair=sphere(player,0,2.34,-.07,.39,0x302018);
 hair.scale.set(1,.55,1);
-for(const side of [-1,1]){
- const arm=box(player,side*.52,1.05,0,.19,.72,.2,0xd9a47e);
+
+// Hair fringe
+sphere(player,0,2.25,.30,.16,0x302018);
+
+// Eyes
+for(const x of [-.14,.14]){
+ sphere(player,x,2.16,.335,.055,0xffffff);
+ sphere(player,x,2.16,.383,.027,0x25201c);
+ sphere(player,x,2.17,.405,.012,0xffffff);
 }
+
+// Eyebrows
+for(const x of [-.14,.14]){
+ const brow=box(player,x,2.27,.34,.13,.035,.045,0x302018);
+}
+
+// Nose
+sphere(player,0,2.07,.40,.055,0xc98e68);
+
+// Mouth
+box(player,0,1.96,.365,.12,.025,.025,0x7c302d);
+
+// Ears
+for(const x of [-.39,.39]){
+ sphere(player,x,2.12,0,.09,0xc98e68);
+}
+
+// Arms and hands
+const arms=[];
+for(const side of [-1,1]){
+ const arm=new THREE.Mesh(
+  new THREE.CapsuleGeometry(.13,.55,4,8),
+  mat(0xd9a47e)
+ );
+ arm.position.set(side*.53,1.25,0);
+ arm.rotation.z=side*-.12;
+ arm.castShadow=true;
+ player.add(arm);
+ arms.push(arm);
+
+ // Hands
+ sphere(player,side*.57,.83,.02,.16,0xd9a47e);
+
+ // Fingers
+ for(let i=0;i<4;i++){
+  sphere(player,side*(.48+i*.06),.70,.04,.045,0xd9a47e);
+ }
+}
+
+// Legs
+for(const side of [-1,1]){
+ const leg=box(player,side*.19,.37,0,.25,.65,.3,0x253a68);
+ leg.castShadow=true;
+
+ // Shoes
+ box(player,side*.19,.07,.10,.3,.14,.43,0x34251d);
+}
+
+// Outfit
 function changeOutfit(){
  outfitIndex=(outfitIndex+1)%outfitColors.length;
  body.material.color.setHex(outfitColors[outfitIndex]);
  toast("Bagong outfit unlocked!");
 }
+
 
 // ---------- WORLD OBJECTS ----------
 let worldObjects=[];
