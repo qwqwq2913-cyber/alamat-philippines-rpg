@@ -252,16 +252,65 @@ function tree(x,z){
  trunk.position.y=1.5;trunk.castShadow=true;g.add(trunk);
  sphere(g,0,3.5,0,1.7,0x267b43);
  sphere(g,.8,3.1,.3,1.1,0x368b48);
-}
+
 function house(x,z){
  const g=addWorld(group(scene,x,0,z));
- box(g,0,1.1,0,4.8,2.2,4,0xb78a56);
- box(g,0,2.45,0,6,.35,5.2,0x78462b);
- const roof=new THREE.Mesh(new THREE.ConeGeometry(4,2,4),mat(0x92532d));
- roof.rotation.y=Math.PI/4;roof.position.y=3.3;roof.castShadow=true;g.add(roof);
- box(g,0,.8,2.05,1,1.5,.12,0x51321f);
- for(const s of [-1,1])box(g,s*1.5,.55,2.2,.25,1.1,.25,0x78502d);
+
+ // Wooden stilts
+ for(const sx of [-1.8,1.8]){
+  for(const sz of [-1.5,1.5]){
+   box(g,sx,.65,sz,.22,1.3,.22,0x76502d);
+  }
+ }
+
+ // Wooden floor and walls
+ box(g,0,1.35,0,5, .3,4.5,0x987044);
+ box(g,0,2.45,0,4.8,2.1,4.2,0xc69a63);
+
+ // Front door
+ box(g,0,2,2.12,.85,1.5,.12,0x59391f);
+ box(g,.23,2,.20,.07,.07,.07,0xe3b95c);
+
+ // Windows
+ for(const side of [-1,1]){
+  box(g,side*1.55,2.6,2.13,.8,.7,.1,0x6c9b91);
+  box(g,side*1.55,2.6,2.20,.07,.8,.08,0x67452b);
+  box(g,side*1.55,2.6,2.20,.8,.07,.08,0x67452b);
+  box(g,side*1.55,2.6,2.25,.06,.7,.06,0xf0d7a0);
+ }
+
+ // Pitched nipa roof
+ const roof1=box(g,-1.5,3.75,0,3.5,.25,5.5,0x8b552d);
+ const roof2=box(g,1.5,3.75,0,3.5,.25,5.5,0x8b552d);
+ roof1.rotation.z=-.48;
+ roof2.rotation.z=.48;
+
+ // Roof ridge
+ box(g,0,4.55,0,.25,.25,5.8,0x65401f);
+
+ // Front stairs
+ for(let i=0;i<4;i++){
+  box(g,0,.35+i*.23,2.8-i*.35,1.3,.22,.65,0x987044);
+ }
+
+ // Small porch railing
+ for(const side of [-1,1]){
+  box(g,side*2.1,1.8,2.35,.12,.7,.12,0x76502d);
+ }
+ box(g,0,2.05,2.35,4.2,.12,.12,0x76502d);
+
+ // Decorative flower pots
+ for(const side of [-1,1]){
+  const pot=new THREE.Mesh(
+   new THREE.CylinderGeometry(.18,.13,.3,10),
+   mat(0x9a5637)
+  );
+  pot.position.set(side*2.5,.3,2.5);
+  g.add(pot);
+  sphere(g,side*2.5,.58,2.5,.23,0x3d9149);
+ }
 }
+
 
 
 function makeNPC(name,x,z,color,role,dialogue){
