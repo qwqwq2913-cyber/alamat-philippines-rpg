@@ -565,11 +565,45 @@ function animate(){
   let f=0,s=0;
   if(keys.w)f=1;if(keys.s)f=-1;if(keys.a)s=-1;if(keys.d)s=1;
   const dir=new THREE.Vector3(s,0,-f);
-  if(dir.length()>0){
-   dir.normalize().applyAxisAngle(new THREE.Vector3(0,1,0),cameraAngle);
-   player.position.addScaledVector(dir,dt*8);
-   player.rotation.y=Math.atan2(dir.x,dir.z);
+  if(dir.length()>0)
+  // Player walking animation
+  const moving=dir.length()>0;
+  const walk=clock.elapsedTime*9;
+
+  if(arms && moving){
+   arms[0].rotation.z=Math.sin(walk)*.45;
+   arms[1].rotation.z=-Math.sin(walk)*.45;
+  }else if(arms){
+   arms[0].rotation.z=0;
+   arms[1].rotation.z=0;
   }
+
+  body.position.y=1.25+(moving?Math.abs(Math.sin(walk))*.06:0);
+
+  // NPC idle and walking animations
+  npcs.forEach((npc,i)=>{
+   const phase=clock.elapsedTime*3+i;
+   const nearby=player.position.distanceTo(npc.group.position)<5;
+
+   npc.arms.forEach((arm,j)=>{
+    arm.rotation.z=nearby && dialogOpen
+      ? Math.sin(clock.elapsedTime*5+j)*.18
+      : Math.sin(phase)*.035;
+   });
+
+   npc.legs.forEach((leg,j)=>{
+    leg.rotation.x=Math.sin(phase+j*Math.PI)*.025;
+   });
+
+   // Talking mouth movement
+   const talking=dialogOpen &&
+    document.getElementById("speaker").textContent===npc.name;
+
+   npc.mouth.scale.y=talking
+    ? 1+Math.abs(Math.sin(clock.elapsedTime*12))*3
+    : 1;
+  });
+
   velocityY-=20*dt;player.position.y+=velocityY*dt;
   if(player.position.y<=0){player.position.y=0;velocityY=0;onGround=true;}
   player.position.x=THREE.MathUtils.clamp(player.position.x,-55,55);
