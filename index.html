@@ -262,16 +262,84 @@ function house(x,z){
  box(g,0,.8,2.05,1,1.5,.12,0x51321f);
  for(const s of [-1,1])box(g,s*1.5,.55,2.2,.25,1.1,.25,0x78502d);
 }
+
 function makeNPC(name,x,z,color,role,dialogue){
  const g=addWorld(group(scene,x,0,z));
- const torso=new THREE.Mesh(new THREE.CapsuleGeometry(.38,.85,4,8),mat(color));
- torso.position.y=1;g.add(torso);
- sphere(g,0,1.85,0,.33,0xc98e68);
- sphere(g,0,2.05,-.04,.35,0x302018).scale.y=.5;
- const marker=sphere(g,0,2.6,0,.13,0xffd75e);
- const npc={name,group:g,role,dialogue,marker};
- npcs.push(npc);return npc;
+ const skin=0xc98e68;
+ const darkHair=0x302018;
+
+ // Body and clothing
+ const torso=new THREE.Mesh(
+  new THREE.CapsuleGeometry(.38,.8,5,12),
+  mat(color)
+ );
+ torso.position.y=1.15;
+ torso.castShadow=true;
+ g.add(torso);
+
+ // Neck and head
+ sphere(g,0,1.77,0,.14,skin);
+ sphere(g,0,2.08,0,.34,skin);
+
+ // Hair
+ const hair=sphere(g,0,2.29,-.06,.36,darkHair);
+ hair.scale.set(1,.55,1);
+ sphere(g,0,2.19,.27,.14,darkHair);
+
+ // Eyes
+ for(const side of [-1,1]){
+  sphere(g,side*.13,2.12,.30,.05,0xffffff);
+  sphere(g,side*.13,2.12,.34,.025,0x211b18);
+  sphere(g,side*.13,2.13,.36,.01,0xffffff);
+
+  // Eyebrows
+  const brow=box(g,side*.13,2.22,.30,.12,.025,.035,darkHair);
+
+  // Ears
+  sphere(g,side*.34,2.07,0,.075,skin);
+
+  // Arms
+  const arm=new THREE.Mesh(
+   new THREE.CapsuleGeometry(.12,.48,4,8),
+   mat(skin)
+  );
+  arm.position.set(side*.48,1.20,0);
+  arm.rotation.z=side*-.15;
+  arm.castShadow=true;
+  g.add(arm);
+
+  // Hands and fingers
+  sphere(g,side*.52,.86,.02,.13,skin);
+  for(let i=0;i<4;i++){
+   sphere(g,side*(.46+i*.045),.74,.03,.035,skin);
+  }
+
+  // Legs
+  box(g,side*.18,.38,0,.23,.65,.27,0x35415b);
+
+  // Shoes
+  box(g,side*.18,.07,.10,.29,.14,.38,0x38251d);
+ }
+
+ // Nose and mouth
+ sphere(g,0,2.04,.36,.045,skin);
+ box(g,0,1.94,.32,.10,.025,.025,0x793b37);
+
+ // Floating interaction marker
+ const marker=sphere(g,0,2.75,0,.13,0xffd75e);
+
+ const npc={
+  name,
+  group:g,
+  role,
+  dialogue,
+  marker
+ };
+
+ npcs.push(npc);
+ return npc;
 }
+
 function makeArtifact(x,z,index){
  const gem=new THREE.Mesh(new THREE.OctahedronGeometry(.65),new THREE.MeshStandardMaterial({
   color:[0xffd34e,0x56dfff,0xe27bff][index],
